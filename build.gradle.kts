@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.spigotmc:spigot-api:1.14-R0.1-SNAPSHOT")
+    compileOnly("org.bukkit:bukkit:1.14-R0.1-SNAPSHOT")
 }
 
 java {
