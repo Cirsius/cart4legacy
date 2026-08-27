@@ -1,0 +1,6 @@
+name: cart4legacy
+version: '0'
+main: net.cirsius.cart4legacy.Cart4Legacy
+api-version: '1.14'
+author: cirsius
+description: modern crossbow carting for older versions.
