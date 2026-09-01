@@ -1,72 +1,22 @@
 package net.cirsius.cart4legacy;
 
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.entity.AbstractArrow;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityShootBowEvent;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.BlockIterator;
-import org.bukkit.util.BoundingBox;
-import org.bukkit.util.Vector;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.io.File;
 
-public final class Cart4Legacy extends JavaPlugin implements Listener {
-    private final Set<AbstractArrow> arrows = new HashSet<>();
-
+public final class Cart4Legacy extends JavaPlugin {
     @Override
     public void onEnable() {
-        getServer().getPluginManager().registerEvents(this, this);
-        getServer().getScheduler().runTaskTimer(this, this::tick, 1, 1);
-    }
+        saveResource("cart.yml", false);
+        FileConfiguration config = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "cart.yml"));
 
-    @EventHandler(ignoreCancelled = true)
-    public void onShoot(EntityShootBowEvent event) {
-        ItemStack bow = event.getBow();
-        if (bow != null && bow.getType() == Material.CROSSBOW
-                && event.getProjectile() instanceof AbstractArrow) {
-            AbstractArrow arrow = (AbstractArrow) event.getProjectile();
-            if (!ignite(arrow)) arrows.add(arrow);
+        if (config.getBoolean("fixes.crossbow-carting", true)) {
+            getServer().getPluginManager().registerEvents(new CrossbowFix(this), this);
         }
-    }
-
-    private void tick() {
-        Iterator<AbstractArrow> iterator = arrows.iterator();
-        while (iterator.hasNext()) {
-            AbstractArrow arrow = iterator.next();
-            if (!arrow.isValid() || arrow.isInBlock() || arrow.getFireTicks() > 0 || ignite(arrow)) {
-                iterator.remove();
-            }
+        if (config.getBoolean("fixes.tnt-minecart-drops", true)) {
+            getServer().getPluginManager().registerEvents(new CartDropFix(), this);
         }
-    }
-
-    private boolean ignite(AbstractArrow arrow) {
-        Location location = arrow.getLocation();
-        Vector start = location.toVector();
-        Vector velocity = arrow.getVelocity();
-        double distance = velocity.length();
-        if (distance == 0) return false;
-
-        BlockIterator blocks = new BlockIterator(location.getWorld(), start, velocity, 0,
-                (int) Math.ceil(distance));
-        while (blocks.hasNext()) {
-            Block block = blocks.next();
-            if (isFire(block) && BoundingBox.of(block).rayTrace(start, velocity, distance) != null) {
-                arrow.setFireTicks(100);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isFire(Block block) {
-        Material type = block.getType();
-        return type == Material.FIRE || type == Material.LAVA || type.name().equals("SOUL_FIRE");
     }
 }

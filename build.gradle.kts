@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "net.cirsius"
-version = "0"
+version = "1"
 
 base {
     archivesName.set("cart4legacy")
